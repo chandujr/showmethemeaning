@@ -1,72 +1,104 @@
 let popup = null;
+let popupTimeout = null;
+let lastMouseUpTime = 0;
 
-document.addEventListener('dblclick', async function(e) {
-    const selection = window.getSelection().toString().trim();
-    if (selection.length > 0) {
-        if (popup) {
-            document.body.removeChild(popup);
-        }
-        
-        const { definitions, phonetic } = await getDefinitionsAndPhonetic(selection);
-        
-        popup = document.createElement('div');
-        popup.style.position = 'absolute';
-        popup.style.left = `${e.pageX}px`;
-        popup.style.top = `${e.pageY}px`;
-        popup.style.backgroundColor = 'white';
-        popup.style.border = '1px solid black';
-        popup.style.borderRadius = '5px';
-        popup.style.padding = '10px';
-        popup.style.zIndex = '1000';
-        popup.style.maxWidth = '350px';
-        popup.style.maxHeight = '400px';
-        popup.style.overflowY = 'auto';
-        popup.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-        
-        let content = `<h3 style="margin-top: 0; margin-bottom: 5px;">${selection}</h3>`;
-        if (phonetic) {
-            content += `<p style="margin-top: 0; margin-bottom: 10px; font-size: 0.8em; color: #666;">${phonetic}</p>`;
-        }
-        for (const [partOfSpeech, definitionList] of Object.entries(definitions)) {
-            if (definitionList && definitionList.length > 0) {
-                content += `<p><strong>${partOfSpeech}:</strong></p>`;
-                content += `<ol style="margin-top: 5px; padding-left: 20px;">`;
-                definitionList.slice(0, 2).forEach(def => {
-                    content += `<li>${def}</li>`;
-                });
-                content += `</ol>`;
-                if (definitionList.length > 2) {
-                    content += `<p class="more-definitions" data-part="${partOfSpeech}" style="cursor: pointer; color: blue; margin-top: 0;">Show more</p>`;
-                }
-            }
-        }
-        popup.innerHTML = content || "No definitions found.";
-        
-        document.body.appendChild(popup);
-
-        // Add event listeners for "Show more" links
-        popup.querySelectorAll('.more-definitions').forEach(element => {
-            element.addEventListener('click', function() {
-                const partOfSpeech = this.getAttribute('data-part');
-                const allDefinitions = definitions[partOfSpeech];
-                let additionalContent = `<ol start="3" style="margin-top: 5px; padding-left: 20px;">`;
-                allDefinitions.slice(2).forEach(def => {
-                    additionalContent += `<li>${def}</li>`;
-                });
-                additionalContent += `</ol>`;
-                this.insertAdjacentHTML('beforebegin', additionalContent);
-                this.style.display = 'none';
-            });
-        });
+document.addEventListener('mousedown', function (e) {
+    if (popupTimeout) {
+        clearTimeout(popupTimeout);
+        popupTimeout = null;
     }
-});
 
-document.addEventListener('click', function(e) {
     if (popup && !popup.contains(e.target)) {
         document.body.removeChild(popup);
         popup = null;
     }
 });
+
+document.addEventListener('mouseup', function (e) {
+    lastMouseUpTime = Date.now();
+});
+
+document.addEventListener('dblclick', function (e) {
+    if (popupTimeout) {
+        clearTimeout(popupTimeout);
+    }
+
+    popupTimeout = setTimeout(function () {
+        const selection = window.getSelection().toString().trim();
+        if (selection.length > 0 && selection.split(/\s+/).length === 1) {
+            if (Date.now() - lastMouseUpTime >= 250) {
+                showPopup(selection, e.pageX, e.pageY);
+            }
+        }
+    }, 250);
+});
+
+document.addEventListener('selectionchange', function () {
+    if (popupTimeout) {
+        clearTimeout(popupTimeout);
+        popupTimeout = null;
+    }
+});
+
+async function showPopup(word, x, y) {
+    const { definitions, phonetic } = await getDefinitionsAndPhonetic(word);
+
+    popup = document.createElement('div');
+    popup.style.position = 'absolute';
+    popup.style.left = `${x}px`;
+    popup.style.top = `${y}px`;
+    popup.style.backgroundColor = 'white';
+    popup.style.border = '1px solid black';
+    popup.style.borderRadius = '5px';
+    popup.style.padding = '10px';
+    popup.style.zIndex = '1000';
+    popup.style.maxWidth = '350px';
+    popup.style.maxHeight = '400px';
+    popup.style.overflowY = 'auto';
+    popup.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+
+    let content = `<h3 style="margin-top: 0; margin-bottom: 5px;">${word}</h3>`;
+    if (phonetic) {
+        content += `<p style="margin-top: 0; margin-bottom: 10px; font-size: 0.8em; color: #666;">${phonetic}</p>`;
+    }
+    for (const [partOfSpeech, definitionList] of Object.entries(definitions)) {
+        if (definitionList && definitionList.length > 0) {
+            content += `<p><strong>${partOfSpeech}:</strong></p>`;
+            content += `<ol style="margin-top: 5px; padding-left: 20px;">`;
+            definitionList.slice(0, 2).forEach(def => {
+                content += `<li>${def}</li>`;
+            });
+            content += `</ol>`;
+            if (definitionList.length > 2) {
+                content += `<p class="more-definitions" data-part="${partOfSpeech}" style="cursor: pointer; color: blue; margin-top: 0;">Show more</p>`;
+            }
+        }
+    }
+    popup.innerHTML = content || "No definitions found.";
+
+    document.body.appendChild(popup);
+
+    // Add event listeners for "Show more" links
+    popup.querySelectorAll('.more-definitions').forEach(element => {
+        element.addEventListener('click', function (e) {
+            e.stopPropagation(); // Prevent the click from bubbling up
+            const partOfSpeech = this.getAttribute('data-part');
+            const allDefinitions = definitions[partOfSpeech];
+            let additionalContent = `<ol start="3" style="margin-top: 5px; padding-left: 20px;">`;
+            allDefinitions.slice(2).forEach(def => {
+                additionalContent += `<li>${def}</li>`;
+            });
+            additionalContent += `</ol>`;
+            this.insertAdjacentHTML('beforebegin', additionalContent);
+            this.style.display = 'none';
+        });
+    });
+
+    // Prevent clicks inside the popup from closing it
+    popup.addEventListener('click', function (e) {
+        e.stopPropagation();
+    });
+}
 
 async function getDefinitionsAndPhonetic(word) {
     try {
