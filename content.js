@@ -8,9 +8,9 @@ document.addEventListener('mousedown', function (e) {
         popupTimeout = null;
     }
 
-    if (popup && !popup.contains(e.target)) {
-        document.body.removeChild(popup);
-        popup = null;
+    // Close all popups if clicking outside
+    if (!e.target.closest('.dictionary-popup')) {
+        closeAllPopups();
     }
 });
 
@@ -27,6 +27,7 @@ document.addEventListener('dblclick', function (e) {
         const selection = window.getSelection().toString().trim();
         if (selection.length > 0 && selection.split(/\s+/).length === 1) {
             if (Date.now() - lastMouseUpTime >= 250) {
+                closeAllPopups(); // Close any existing popups
                 showPopup(selection, e.pageX, e.pageY);
             }
         }
@@ -40,10 +41,18 @@ document.addEventListener('selectionchange', function () {
     }
 });
 
+function closeAllPopups() {
+    document.querySelectorAll('.dictionary-popup').forEach(popup => {
+        document.body.removeChild(popup);
+    });
+    popup = null;
+}
+
 async function showPopup(word, x, y) {
     const { definitions, phonetic } = await getDefinitionsAndPhonetic(word);
 
     popup = document.createElement('div');
+    popup.className = 'dictionary-popup'; // Add a class for easy selection
     popup.style.position = 'absolute';
     popup.style.left = `${x}px`;
     popup.style.top = `${y}px`;
