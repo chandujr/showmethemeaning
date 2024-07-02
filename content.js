@@ -47,8 +47,9 @@ async function showPopup(word, x, y) {
     popup.style.position = 'absolute';
     popup.style.left = `${x}px`;
     popup.style.top = `${y}px`;
-    popup.style.backgroundColor = 'white';
-    popup.style.border = '1px solid black';
+    popup.style.backgroundColor = 'var(--popup-bg-color, white)';
+    popup.style.color = 'var(--popup-text-color, black)';
+    popup.style.border = '1px solid var(--popup-border-color, black)';
     popup.style.borderRadius = '5px';
     popup.style.padding = '10px';
     popup.style.zIndex = '1000';
@@ -57,9 +58,29 @@ async function showPopup(word, x, y) {
     popup.style.overflowY = 'auto';
     popup.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
 
+    // Add CSS variables for color scheme
+    const style = document.createElement('style');
+    style.textContent = `
+        :root {
+            --popup-bg-color: white;
+            --popup-text-color: black;
+            --popup-border-color: black;
+            --popup-link-color: blue;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --popup-bg-color: #333;
+                --popup-text-color: #fff;
+                --popup-border-color: #666;
+                --popup-link-color: #4da6ff;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
     let content = `<h3 style="margin-top: 0; margin-bottom: 5px;">${word}</h3>`;
     if (phonetic) {
-        content += `<p style="margin-top: 0; margin-bottom: 10px; font-size: 0.8em; color: #666;">${phonetic}</p>`;
+        content += `<p style="margin-top: 0; margin-bottom: 10px; font-size: 0.8em; color: var(--popup-text-color, #666);">${phonetic}</p>`;
     }
     for (const [partOfSpeech, definitionList] of Object.entries(definitions)) {
         if (definitionList && definitionList.length > 0) {
@@ -70,7 +91,7 @@ async function showPopup(word, x, y) {
             });
             content += `</ol>`;
             if (definitionList.length > 2) {
-                content += `<p class="more-definitions" data-part="${partOfSpeech}" style="cursor: pointer; color: blue; margin-top: 0;">Show more</p>`;
+                content += `<p class="more-definitions" data-part="${partOfSpeech}" style="cursor: pointer; color: var(--popup-link-color, blue); margin-top: 0;">Show more</p>`;
             }
         }
     }
