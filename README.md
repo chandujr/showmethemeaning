@@ -4,4 +4,4 @@ Not being a native English speaker, I always found it hard to follow things on t
 
 ## Installation
 
-The extension is planned to be released through the Firefox Extension marketplace.
+The extension is now live at Firefox Browser ADD-ONS page: https://addons.mozilla.org/en-US/firefox/addon/show-me-the-meaning/
