@@ -10,4 +10,9 @@ The extension is now live at Firefox Browser ADD-ONS page: https://addons.mozill
 
 If you find this extension helpful, please consider supporting me:
 
-<a href="https://www.buymeacoffee.com/neerkoli"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=neerkoli&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a>
+<table style="border:4px dashed black;">
+  <tr>
+    <td><img src="icons/qr-code.png" width="150"/></td>
+    <td><a href="https://www.buymeacoffee.com/neerkoli"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=neerkoli&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a></td>
+  </tr>
+</table>
